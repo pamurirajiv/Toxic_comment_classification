@@ -2,6 +2,10 @@
 
 A deep learning-based toxic comment classification system using Bidirectional LSTM (BiLSTM) neural networks. This project detects multiple categories of toxicity in online comments including toxic, severe toxic, obscene, threat, insult, and identity hate.
 
+##  DATASET
+
+-https://www.kaggle.com/competitions/jigsaw-toxic-comment-classification-challenge/data?select=train.csv.zip
+
 ## 🌟 Features
 
 - **Multi-label Classification**: Detects 6 different types of toxicity simultaneously
