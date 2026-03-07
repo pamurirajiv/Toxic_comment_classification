@@ -2,9 +2,9 @@
 
 A deep learning-based toxic comment classification system using Bidirectional LSTM (BiLSTM) neural networks. This project detects multiple categories of toxicity in online comments including toxic, severe toxic, obscene, threat, insult, and identity hate.
 
-##  DATASET
+## 📝 Dataset
 
--https://www.kaggle.com/competitions/jigsaw-toxic-comment-classification-challenge/data?select=train.csv.zip
+- Source: https://www.kaggle.com/competitions/jigsaw-toxic-comment-classification-challenge/data?select=train.csv.zip
 
 ## 🌟 Features
 
@@ -91,6 +91,42 @@ Toxic_comment_classification/
    ```bash
    pip install tensorflow pandas scikit-learn fastapi uvicorn gradio requests
    ```
+
+## 🐳 Docker Setup
+
+This project includes a `dockerfile` that containerizes the FastAPI service.
+
+### 1. Build the Docker image
+
+Run this command inside `Toxic_comment_classification/`:
+
+```bash
+docker build -t toxic-comment-classifier -f dockerfile .
+```
+
+### 2. Run the container
+
+```bash
+docker run --name toxic-comment-api -p 8000:8000 toxic-comment-classifier
+```
+
+### 3. Test the running API
+
+- Health check: `http://127.0.0.1:8000/health`
+- Swagger docs: `http://127.0.0.1:8000/docs`
+
+### 4. Stop and remove container
+
+```bash
+docker stop toxic-comment-api
+docker rm toxic-comment-api
+```
+
+### Optional: Run in detached mode
+
+```bash
+docker run -d --name toxic-comment-api -p 8000:8000 toxic-comment-classifier
+```
 
 ## 📊 Training the Model
 
