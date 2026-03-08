@@ -1,24 +1,8 @@
 import os
 import pandas as pd
 import tensorflow as tf
-import re
+from preprocessing import clean_text
 from sklearn.model_selection import train_test_split
-
-
-def clean_text(text):
-    text = str(text)
-
-    # remove non ASCII characters
-    text = re.sub(r"[^\x00-\x7F]+", "", text)
-
-    # convert to lowercase
-    text = text.lower()
-
-    # remove extra spaces
-    text = re.sub(r"\s+", " ", text).strip()
-
-    return text
-
 
 from tensorflow.keras.layers import (
     TextVectorization,
