@@ -1,8 +1,24 @@
 import os
-from preprocessing import clean_text
 import pandas as pd
 import tensorflow as tf
+import re
 from sklearn.model_selection import train_test_split
+
+
+def clean_text(text):
+    text = str(text)
+
+    # remove non ASCII characters
+    text = re.sub(r"[^\x00-\x7F]+", "", text)
+
+    # convert to lowercase
+    text = text.lower()
+
+    # remove extra spaces
+    text = re.sub(r"\s+", " ", text).strip()
+
+    return text
+
 
 from tensorflow.keras.layers import (
     TextVectorization,
@@ -15,7 +31,7 @@ from tensorflow.keras.layers import (
 )
 
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.metrics import Precision, Recall
+from tensorflow.keras.metrics import Precision, Recall, AUC
 
 
 LOCAL_DIR = os.path.dirname(__file__)
@@ -32,23 +48,48 @@ df = pd.read_csv(DATA_PATH)
 if "id" in df.columns:
     df = df.drop(columns=["id"])
 
+
 df["comment_text"] = df["comment_text"].apply(clean_text)
 
-# df = df.sample(frac=0.4, random_state=42).reset_index(drop=True)
+label_columns = [
+    "toxic",
+    "severe_toxic",
+    "obscene",
+    "threat",
+    "insult",
+    "identity_hate"
+]
 
 
-train, test = train_test_split(df, test_size=0.2, random_state=42)
+label_counts = df[label_columns].sum()
+total_samples = len(df)
+
+weights1 = (total_samples - label_counts) / label_counts
+
+weights1 = tf.constant(weights1.values, dtype=tf.float32)
+print(weights1)
+
+def weighted_binary_crossentropy(y_true, y_pred):
+    bce = tf.keras.backend.binary_crossentropy(y_true, y_pred)
+    weights = y_true * weights1 + (1 - y_true)
+    return tf.reduce_mean(bce * weights)
+
+
+
+train, test = train_test_split(
+    df,
+    test_size=0.2,
+    random_state=42
+)
 
 x_train = train["comment_text"]
 
-y_train = train[
-    ["toxic", "severe_toxic", "obscene", "threat", "insult", "identity_hate"]
-].values
+y_train = train[label_columns].values
+
 
 
 MAX_FEATURES = 200000
 SEQ_LENGTH = 200
-
 
 vectorizer = TextVectorization(
     max_tokens=MAX_FEATURES,
@@ -56,13 +97,12 @@ vectorizer = TextVectorization(
     output_mode="int"
 )
 
-
 vectorizer.adapt(x_train.values)
 
-vectorizer(["sample sentence"])
 
 vectorizer_model = tf.keras.Sequential([vectorizer])
 vectorizer_model.save(VECTORIZER_PATH)
+
 
 x_train_vectorized = vectorizer(x_train.values)
 
@@ -91,22 +131,28 @@ model.add(Dense(128, activation="relu"))
 
 model.add(Dense(6, activation="sigmoid"))
 
-
-# build model
 model.build(input_shape=(None, SEQ_LENGTH))
 
 model.summary()
 
+
+
 model.compile(
-    loss="binary_crossentropy",
+    loss=weighted_binary_crossentropy,
     optimizer="adam",
-    metrics=[Precision(), Recall()]
+    metrics=[
+        Precision(),
+        Recall(),
+        AUC()
+    ]
 )
+
+
 
 history = model.fit(
     x_train_vectorized,
     y_train,
-    epochs=3,
+    epochs=4,
     batch_size=32,
     validation_split=0.2,
     verbose=1
@@ -115,13 +161,10 @@ history = model.fit(
 
 x_test = vectorizer(test["comment_text"].values)
 
-y_test = test[
-    ["toxic", "severe_toxic", "obscene", "threat", "insult", "identity_hate"]
-].values
-
-
+y_test = test[label_columns].values
 
 print(model.evaluate(x_test, y_test))
+
 
 
 model.save(MODEL_PATH)

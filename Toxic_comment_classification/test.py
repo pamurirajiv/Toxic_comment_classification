@@ -19,8 +19,7 @@ comments = [
 ]
 
 
-x_test = vectorizer(comments)
-
+x_test = vectorizer(tf.constant([comments]))
 
 predictions = model.predict(x_test)
 
