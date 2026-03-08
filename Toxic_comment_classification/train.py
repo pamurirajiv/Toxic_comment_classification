@@ -48,15 +48,10 @@ label_columns = [
 label_counts = df[label_columns].sum()
 total_samples = len(df)
 
-weights1 = (total_samples - label_counts) / label_counts
-
-weights1 = tf.constant(weights1.values, dtype=tf.float32)
-print(weights1)
-
-def weighted_binary_crossentropy(y_true, y_pred):
-    bce = tf.keras.backend.binary_crossentropy(y_true, y_pred)
-    weights = y_true * weights1 + (1 - y_true)
-    return tf.reduce_mean(bce * weights)
+label_counts = train[label_columns].sum()
+total_samples = len(train)
+class_weights = total_samples / (len(label_columns)*label_counts)
+class_weights
 
 
 
@@ -137,6 +132,7 @@ history = model.fit(
     x_train_vectorized,
     y_train,
     epochs=4,
+    class_weight=class_weights,
     batch_size=32,
     validation_split=0.2,
     verbose=1

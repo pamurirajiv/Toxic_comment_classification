@@ -63,13 +63,20 @@ def predict(data: CommentRequest):
         "identity_hate"
     ]
 
-    result = {label: float(score) for label, score in zip(labels, predictions)}
+    threshold = 0.5
+
+    result = {
+        label: {
+            "probability": float(score),
+            "prediction": int(score >= threshold)
+        }
+        for label, score in zip(labels, predictions)
+    }
 
     return {
         "comment": comment,
         "prediction": result
     }
-
 
 @app.get("/health")
 def health_check():
