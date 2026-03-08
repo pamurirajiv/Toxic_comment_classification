@@ -117,7 +117,7 @@ model.summary()
 
 
 model.compile(
-    loss=weighted_binary_crossentropy,
+    loss='binary_crossentropy',
     optimizer="adam",
     metrics=[
         Precision(),
